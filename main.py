@@ -13,12 +13,14 @@ import qrcode
 from PIL import Image, ImageWin
 
 # UI Library
-from nicegui import ui, native
+from nicegui import ui, native, app
 
 # Windows Printing
 import win32print
 import win32ui
 import win32con
+
+app.native.window_args["text_select"] = True
 
 # --- File Constants ---
 SETTINGS_FILE = "settings.json"
