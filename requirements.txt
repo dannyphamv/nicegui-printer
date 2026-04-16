@@ -1,0 +1,7 @@
+nicegui
+python-barcode
+qrcode[pil]
+Pillow
+pywin32
+pyinstaller
+--pre pywebview
