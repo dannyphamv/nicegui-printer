@@ -201,59 +201,64 @@ class BarcodeApp:
                             self.save_app_settings(),
                         ),
                     ).bind_value(self.dark, "value")
+            with ui.card().classes("w-3/4 flex-grow items-center p-5"):
+                # Controls
+                self.toggle = ui.toggle(
+                    ["Barcode", "QR Code"],
+                    value="Barcode",
+                    on_change=self.handle_generation,
+                )
 
-            # Controls
-            self.toggle = ui.toggle(
-                ["Barcode", "QR Code"],
-                value="Barcode",
-                on_change=self.handle_generation,
-            )
+                self.printer_select = ui.select(
+                    self.printers,
+                    label="Select Printer",
+                    value=self.default_printer,
+                    on_change=self.save_app_settings,
+                ).classes("w-full")
 
-            self.printer_select = ui.select(
-                self.printers,
-                label="Select Printer",
-                value=self.default_printer,
-                on_change=self.save_app_settings,
-            ).classes("w-3/4")
+                self.barcode_input = ui.input(
+                    label="Enter or Scan Barcode",
+                    on_change=self.handle_generation,
+                ).classes("w-full")
+                self.barcode_input.on("keydown.enter", self.handle_print)
 
-            self.barcode_input = ui.input(
-                label="Enter or Scan Barcode",
-                on_change=self.handle_generation,
-            ).classes("w-3/4")
-            self.barcode_input.on("keydown.enter", self.handle_print)
+                # Preview & Print Button
+                self.preview = (
+                    ui.image("").props("fit=contain").classes("w-full max-h-46")
+                )
+                self.preview.set_visibility(False)
 
-            # Preview & Print Button
-            self.preview = ui.image("").props("fit=contain").classes("w-3/4 max-h-46")
-            self.preview.set_visibility(False)
-
-            ui.button("Print Label", icon="print", on_click=self.handle_print).classes(
-                "w-3/4 text-lg"
-            ).bind_visibility_from(self.preview, "visible")
+                ui.button(
+                    "Print Label", icon="print", on_click=self.handle_print
+                ).classes("w-full text-lg").bind_visibility_from(
+                    self.preview, "visible"
+                )
 
             # --- History Table ---
-            ui.label("Print History").classes("text-xl font-semibold mt-10")
-            columns = [
-                {
-                    "name": "text",
-                    "label": "Barcode",
-                    "field": "text",
-                    "align": "left",
-                    "sortable": True,
-                },
-                {
-                    "name": "timestamp",
-                    "label": "Time Printed",
-                    "field": "timestamp",
-                    "align": "right",
-                    "sortable": True,
-                },
-            ]
-            self.history_table = ui.table(
-                columns=columns,
-                rows=StorageService.get_history_sorted(),
-                row_key="timestamp",
-                pagination=5,
-            ).classes("w-3/4")
+            with ui.card().classes("w-3/4 flex-grow items-center p-5 mt-10"):
+                ui.label("Print History").classes("text-xl font-semibold")
+                columns = [
+                    {
+                        "name": "text",
+                        "label": "Barcode",
+                        "field": "text",
+                        "align": "left",
+                        "sortable": True,
+                    },
+                    {
+                        "name": "timestamp",
+                        "label": "Time Printed",
+                        "field": "timestamp",
+                        "align": "right",
+                        "sortable": True,
+                    },
+                ]
+                self.history_table = ui.table(
+                    columns=columns,
+                    rows=StorageService.get_history_sorted(),
+                    row_key="timestamp",
+                    pagination=5,
+                ).classes("w-full")
 
 
 def root():
