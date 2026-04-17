@@ -214,20 +214,20 @@ class BarcodeApp:
                 label="Select Printer",
                 value=self.default_printer,
                 on_change=self.save_app_settings,
-            ).classes("w-1/2")
+            ).classes("w-3/4")
 
             self.barcode_input = ui.input(
                 label="Enter or Scan Barcode",
                 on_change=self.handle_generation,
-            ).classes("w-1/2")
+            ).classes("w-3/4")
             self.barcode_input.on("keydown.enter", self.handle_print)
 
             # Preview & Print Button
-            self.preview = ui.image("").props("fit=contain").classes("w-1/2 max-h-46")
+            self.preview = ui.image("").props("fit=contain").classes("w-3/4 max-h-46")
             self.preview.set_visibility(False)
 
             ui.button("Print Label", icon="print", on_click=self.handle_print).classes(
-                "w-1/2 text-lg"
+                "w-3/4 text-lg"
             ).bind_visibility_from(self.preview, "visible")
 
             # --- History Table ---
@@ -253,7 +253,7 @@ class BarcodeApp:
                 rows=StorageService.get_history_sorted(),
                 row_key="timestamp",
                 pagination=5,
-            ).classes("w-1/2")
+            ).classes("w-3/4")
 
 
 def root():
