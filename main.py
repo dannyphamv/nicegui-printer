@@ -126,37 +126,23 @@ class PrinterService:
 class BarcodeApp:
     def __init__(self):
         self.settings = StorageService.load_settings()
+        self.current_bytes: Optional[bytes] = None
         self.printers = PrinterService.get_printers()
+
+        # Determine default printer (Saved vs System Default)
         self.default_printer = (
             self.settings.get("printer") or win32print.GetDefaultPrinter()
         )
 
-        # UI element stubs — assigned in setup_ui
-        self.current_bytes: Optional[bytes] = None
-        self.dark = None
-        self.toggle = None
-        self.printer_select = None
-        self.barcode_input = None
-        self.preview = None
-        self.history_table = None
-
         self.setup_ui()
-
-    def _reset_preview(self):
-        """Hides the preview and clears the current image bytes."""
-        self.preview.set_visibility(False)
-        self.current_bytes = None
-
-    def _handle_dark_mode_change(self, e):
-        """Updates dark mode and persists settings."""
-        self.dark.set_value(e.value)
-        self.save_app_settings()
 
     def handle_generation(self):
         val = self.barcode_input.value.strip()
 
+        # If input is empty, hide the preview and stop
         if not val:
-            self._reset_preview()
+            self.preview.set_visibility(False)
+            self.current_bytes = None
             return
 
         try:
@@ -175,26 +161,33 @@ class BarcodeApp:
         try:
             PrinterService.print_image(self.current_bytes, self.printer_select.value)
 
+            # Save to History and refresh table (Newest on Top)
             StorageService.add_to_history(val)
             self.history_table.rows = StorageService.get_history_sorted()
             self.history_table.update()
 
             ui.notify(f"Printed to {self.printer_select.value}")
 
+            # Reset Input
             self.barcode_input.value = ""
-            self._reset_preview()
+            self.preview.set_visibility(False)
+            self.current_bytes = None
             self.barcode_input.run_method("focus")
         except Exception as e:
             ui.notify(f"Print Error: {e}", type="negative")
 
     def save_app_settings(self):
-        StorageService.save_settings(self.printer_select.value, self.dark.value)
+        """Triggered when printer or theme changes. Check ensures UI is ready."""
+        if hasattr(self, "printer_select"):
+            StorageService.save_settings(self.printer_select.value, self.dark.value)
 
     def setup_ui(self):
+        # Apply Saved Dark Mode
         self.dark = ui.dark_mode()
         self.dark.set_value(self.settings.get("dark_mode", True))
 
         with ui.column().classes("w-full items-center"):
+            # Header
             with ui.row().classes("w-full items-center"):
                 ui.element("div").classes("flex-1")
                 ui.label("QR & Barcode Printer").classes(
@@ -203,10 +196,13 @@ class BarcodeApp:
                 with ui.row().classes("flex-1 justify-end"):
                     ui.switch(
                         "Dark Mode",
-                        on_change=self._handle_dark_mode_change,
+                        on_change=lambda e: (
+                            self.dark.set_value(e.value),
+                            self.save_app_settings(),
+                        ),
                     ).bind_value(self.dark, "value")
-
             with ui.card().classes("w-3/4 flex-grow items-center p-5"):
+                # Controls
                 self.toggle = ui.toggle(
                     ["Barcode", "QR Code"],
                     value="Barcode",
@@ -226,6 +222,7 @@ class BarcodeApp:
                 ).classes("w-full")
                 self.barcode_input.on("keydown.enter", self.handle_print)
 
+                # Preview & Print Button
                 self.preview = (
                     ui.image("").props("fit=contain").classes("w-full max-h-46")
                 )
@@ -237,6 +234,7 @@ class BarcodeApp:
                     self.preview, "visible"
                 )
 
+            # --- History Table ---
             with ui.card().classes("w-3/4 flex-grow items-center p-5 mt-10"):
                 ui.label("Print History").classes("text-xl font-semibold")
                 columns = [
