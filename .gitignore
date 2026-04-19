@@ -182,3 +182,4 @@ cython_debug/
 
 .vscode/
 installer_output/
+*.json
